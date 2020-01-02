@@ -1,0 +1,322 @@
+#app {
+    user-select: none;
+}
+.layout {
+    padding: 4px 0;
+    -webkit-user-select: none;
+    cursor: default;
+}
+
+.vertical-mode   {
+    margin: 0 6%;
+}
+.toolbar {
+    padding: 3px 0 0 0;
+    min-width: 30px;
+    background-color: rgba(0,0,0,0) !important;
+}
+.toolbar svg{
+    width: 22px;
+    height: 20px;
+    fill: var(--color-icon);
+}
+button {
+    border: none;
+}
+button:focus {outline:0;}
+button:hover:before,
+button:focus:before {
+    opacity: 0;
+    -webkit-transition: none;
+    transition: none;
+}
+.tooltip-button {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 2px;
+}
+.tooltip-button:hover {
+    background-color: var(--color-btn-toolbar-hover);
+    border: 1px solid var(--color-btn-icon-active-border);
+    /* background-color: var(--color-btn-active);
+    border: 1px solid var(--color-btn-hover); */
+}
+.tooltip-button:active {
+background-color: rgba(255, 255, 255, 0.15);
+}
+.tooltip-button.loading {
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+	0% {
+        background-color: rgba(255, 255, 255, 0.15);
+	}
+
+	50% {
+        background-color: rgba(255, 255, 255, 0.05);
+	}
+
+	100% {
+        background-color: rgba(255, 255, 255, 0.15);
+	}
+}
+/* .group-exposure svg {
+    fill: var(--color-icon);
+}
+.group-frame svg {
+    fill: #C5E1A5;
+}
+.group-view svg {
+    fill: #FFE082;
+}
+.group-file svg {
+    fill: #FF8A80;
+} */
+.group-ae svg {
+    fill: rgb(213, 160, 221);
+}
+/* .v-list__tile__title {
+    font-size: 11px;
+}
+.v-list__tile {
+    height: 28px;
+}
+.v-input {
+    font-size: 11px;
+} */
+/* .button__content {
+    font-size: 10px;
+}
+.toolbar .button__content:active {
+    background-color: rgb(119, 119, 119);
+    height:inherit;
+} */
+.tooltip-button {
+    float: left;
+}
+
+.tooltip-button span {
+    visibility: hidden;
+
+    background-color: var(--color-header);
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.2);
+    font-size: x-small;
+    color: #fff;
+    text-align: center;
+
+    padding: 4px 4px;
+
+    position: absolute;
+    /* top: 22%; */
+    /* left: 100%; */
+    margin-top: 6px;
+    margin-left: 2px;
+    z-index: 1;
+    /* white-space: nowrap; */
+
+    opacity: 0;
+    transition: opacity .25s;
+    transition-delay: .4s;
+}
+.vertical-mode .tooltip-button span {
+    margin: 0;
+    /* top: 100%; */
+    /* top: 8%;
+    left: auto;
+    right: 90%; */
+    transform-origin: 0% 100%;
+    margin-left: -28px;
+    margin-top: 9px;
+    /* transform-origin: 100% 0%; */
+    transform: rotate(90deg);
+}
+.tooltip-button:hover span {
+    visibility: visible;
+    opacity: 1;
+}
+.tooltip-button:hover span:hover {
+    visibility: hidden;
+    transition-delay: 0s;
+}
+.seperator {
+    float: left;
+    width: 1px;
+    margin: 0 4px;
+    height: 30px;
+    background-color: var(--color-divider);
+}
+.vertical-mode .seperator {
+    width: 100%;
+    height: 1px;
+    margin: 4px 0;
+}
+.option-checkbox {
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    border: 1px solid var(--color-checkbox);
+    padding: 5px;
+    border-radius: 1px;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    outline: 0;
+    margin: auto 3px auto 1px;
+}
+/* .option-checkbox:hover {
+    border: 1px solid var(--color-checkbox-hover);
+} */
+.option-checkbox:checked:after {
+    background-color: var(--color-checkbox);
+    width: 8px;
+    height: 8px;
+    margin: -4px;
+    content: ' ';
+    position: absolute;
+}
+input.text {
+    color: var(--color-input-text);
+    background-color: var(--color-input);
+    border: 1px solid var(--color-input-border);
+    padding: 0 4px;
+    height: 28px;
+}
+/* input.text:focus {
+color: var(--color-input-focus-text);
+background-color: var(--color-input-focus);
+border: 1px solid var(--color-input-focus-border);
+} */
+.text-input-btn {
+    border: 1px solid rgba(0,0,0,0);
+    border-radius: 2px;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+.text-input-btn:hover {
+    border: 1px solid var(--color-btn-pill-active);
+}
+.text-input-btn button {
+    vertical-align: middle;
+}
+
+
+.group-heading {
+    position: relative;
+    text-transform: uppercase;
+    font-size: 10px;
+    padding: 6px 0 4px 0;
+    display: block;
+    overflow: hidden;
+    letter-spacing: 0.1em;
+}
+.fold-group {
+    border-top: solid 1px var(--color-divider);
+    float: left;
+    width: 100%;
+}
+.fold-content {
+    padding-bottom: 4px;
+    float: left;
+    width: 100%;
+}
+.fold-icon {
+    float: right;
+    margin-top: -2px;
+    fill: #d2d2d2;
+    height: 18px;
+    transform-origin: 50% 50%;
+    transition: all 0.15s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+.fold-icon.flip {
+    transform: rotate(-90deg);
+}
+.full {
+width: 100%;
+}
+.half {
+width: 50%;
+}
+.row {
+margin-bottom: 10px;
+}
+.input-label {
+margin-bottom: 2px;
+}
+.btn-text {
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 2px;
+    border: 1px solid var(--color-btn-pill-active);
+    color: var(--color-btn-pill-border);
+    padding: 2px 8px 4px 8px;
+    margin: 4px 0;
+}
+.btn-text:hover {
+    background-color: var(--color-btn-pill-hover);
+    color: var(--color-bg);
+}
+.btn-confirm {
+    border: 1px solid #ff3860;
+    background-color: rgba(255, 56, 96, 0.3);
+    color: #fff;
+}
+.btn-confirm:hover {
+    background-color: #ff3860;
+}
+/* Dropup Button */
+.dropbtn {
+    box-sizing: border-box;
+    background-color: var(--color-scrollbar-thumb);
+    border: 1px solid var(--color-btn-pill-active);
+    border-radius: 1px;
+    padding: 4px 8px;
+    /* margin: 0 4px; */
+    color: #f0f0f0;
+    font-family: 'Roboto', monospace;
+    width: 172px;
+    display: block;
+    text-align: start
+  }
+.dropbtn svg{
+    width: 18px;
+    fill: var(--color-icon);
+    float: right;
+    margin: -3px -5px 0 0;
+}
+.dropup {
+    position: relative;
+    display: inline-block;
+    margin: 2px -1px;
+}
+
+.dropup-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    width: 175px;
+    bottom: -46px;
+    z-index: 1;
+    /* margin-left: 4px; */
+}
+.dropup-content span {
+    float: right;
+    padding: 4px;
+    border-radius: 4px;
+    margin-top: 3px;
+    background-color: #0377BC;
+}
+
+.dropup-content a {
+    color: black;
+    padding: 1px 6px;
+    text-decoration: none;
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropup-content a:hover {
+    background-color: #ccc
+}
+
+.dropup:hover .dropup-content {
+    display: block;
+}
