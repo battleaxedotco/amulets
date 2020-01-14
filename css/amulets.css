@@ -42,7 +42,7 @@ button:focus:before {
     border: 1px solid var(--color-btn-hover); */
 }
 .tooltip-button:active {
-background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 .tooltip-button.loading {
     animation: pulse 1s infinite;
@@ -251,16 +251,21 @@ margin-bottom: 2px;
     margin: 4px 0;
 }
 .btn-text:hover {
-    background-color: var(--color-btn-pill-hover);
-    color: var(--color-bg);
+    background-color: var(--color-btn-disabled);
+    /* color: var(--color-bg); */
+}
+.btn-text:active {
+    background-color: var(--color-btn-active);
+    /* color: var(--color-bg); */
 }
 .btn-confirm {
-    border: 1px solid #ff3860;
+    border: 1px solid #dd526e;
     background-color: rgba(255, 56, 96, 0.3);
     color: #fff;
 }
 .btn-confirm:hover {
-    background-color: #ff3860;
+    background-color: #dd526e;
+    color: var(--color-bg);
 }
 /* Dropup Button */
 .dropbtn {

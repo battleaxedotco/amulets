@@ -1,6 +1,9 @@
+/*jshint esversion: 6, asi: true */
+
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const bodyParser = require('body-parser');
 
 import csInterface from './CSInterface.js';
 import Vulcan from './Vulcan.js';
@@ -189,6 +192,11 @@ export default {
             window.cep.fs.writeFile(prefsPath + 'prefs.json', JSON.stringify(prefs, false, 2));
         }, 100);
     },
+    reload() {
+        console.log('reload');
+        
+        window.location.reload()
+    },
     evalScript(funcName, params) {        
         var args = JSON.stringify(params);
         if (typeof args === "undefined" || args === "{}") {
@@ -225,7 +233,18 @@ export default {
         const PORT = port || "3200";
 
         const app = express()
-        app.use(express.json())
+        // app.use(express.json({ limit: "50mb" }) )
+        // app.use(express.json() )
+        app.use(bodyParser.json({ limit: '50mb' }));
+        app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+
+        app.use(function(req, res, next) {
+            res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            next();
+        })
+        // app.use(bodyParser.json({ limit: '50mb' }));
+        // app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
         app.post('/evalscript', (req, res) => {
             let msg = req.body
@@ -251,26 +270,46 @@ export default {
             })
             .catch(error => {
                 console.log("Looks like there was a problem:", error);
+                alert('bug')
                 res.status(400).send(error)
             })
         })
-        app.post('/vulcan', (req, res) => {
-            // no method name requested
-            if (!req.body.method) {
-                res.status(400).send('A method is required')
-            }
-            let msg = {
-                method: 'plops'
+        app.post('/writeFiles', (req, res) => {
+            let msg = req.body
+
+            // switch to adobe app
+            if (msg.switch) {
+                this.switchApps(msg.switch)
             }
 
-            // this.evalScript(req.body.method, req.body.data)
-            // .then((returnMsg) => {
-            //     res.send(returnMsg)
-            // })
-            // .catch(error => {
-            //     console.log("Looks like there was a problem:", error);
-            //     res.status(400).send(error)
-            // })
+            this.folderDialog('Select where to save files')
+            .then(adobePath => {
+                return this.untildify(adobePath)
+            })
+            .then(folderPath => {
+                let images = msg.images;
+                let fileNames = []
+
+                images.forEach(image => {
+                    let data = image.imgData
+                    let fileName = image.name
+                    fileNames.push(fileName)
+
+                    let savePath = folderPath + '/' + fileName
+
+                    fs.writeFileSync(decodeURI(savePath), data, 'base64', function(err) {
+                        console.log(err);
+                    });
+                });
+                return folderPath
+            })
+            .then((returnMsg) => {
+                res.send(JSON.stringify({path: returnMsg}))
+            })
+            .catch(error => {
+                console.log("Looks like there was a problem:", error);
+                res.status(400).send(error)
+            })
         })
 
         app.listen(PORT, () => console.log(`Amulets server listening on port ${PORT}`))
