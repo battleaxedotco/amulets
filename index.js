@@ -119,8 +119,7 @@ export default {
                 }
 
                 var aeProjFolder = app.project.file.parent;
-
-                var folderPath = Folder(aeProjFolder + '${path}');
+                var folderPath = Folder(aeProjFolder.toString() + '/' + '${relPath}');
                 folderPath.execute();
             }) ()
         `;
@@ -266,11 +265,12 @@ export default {
             
             this.evalScript(msg.method, data)
             .then((returnMsg) => {
+                console.log(returnMsg);
+                
                 res.send(returnMsg)
             })
             .catch(error => {
                 console.log("Looks like there was a problem:", error);
-                alert('bug')
                 res.status(400).send(error)
             })
         })
