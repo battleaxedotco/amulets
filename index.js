@@ -128,12 +128,12 @@ export default {
             cs.evalScript(script, resolve);
         });
     },
-    untildify(adobePath) {        
+    untildify(adobePath) {                
         if (adobePath == 'null') { return null }        // dialog canceled
         else if ( (cs.getOSInformation().substring(0, 3) == 'Mac') ) {                           // mac
             
             if (adobePath.charAt(0) !== '~') { adobePath = '/Volumes' + adobePath }	                // append /Volumes to filepath if not on the local drive
-            if (adobePath.substring(0,2) == '~/') { 
+            else if (adobePath.substring(0,2) == '~/') { 
                 var homedir = path.join(cs.getSystemPath(SystemPath.USER_DATA), '/../../');
                 adobePath = adobePath.replace('~/', homedir);
             }
@@ -142,12 +142,15 @@ export default {
                 var drivePath = adobePath.replace('/Volumes/', '');                            // remove /Volumes/
                 adobePath = drivePath.slice(0,1) + ':' + drivePath.slice(1);                   // add a colon after the drive letter - f/ becomes f:/
             }
-            if ( (/^\/./).test(adobePath )) {                                                  // windows drive letter
+            else if ( (/^\/./).test( adobePath )) {                                                  // windows drive letter
                 var drivePath = adobePath;                                                     // remove /Volumes/
                 adobePath = drivePath.slice(1,2) + ':' + drivePath.slice(2);                   // add a colon after the drive letter - f/ becomes f:/
             }
-        }
-
+            else if (adobePath.substring(0, 2) == '~/') {                                      // starts with ~
+                var homedir = path.join(cs.getSystemPath(SystemPath.USER_DATA), '/../../');
+                adobePath = adobePath.replace('~/', homedir);
+            }
+        }        
         return adobePath;
     },
     getPrefs(prefs) {
@@ -273,6 +276,8 @@ export default {
         })
         app.post('/writeFiles', (req, res) => {
             let msg = req.body
+            console.log(msg);
+            
 
             // switch to adobe app
             if (msg.switch) {
@@ -293,6 +298,8 @@ export default {
                     fileNames.push(fileName)
 
                     let savePath = folderPath + '/' + fileName
+console.log(savePath);
+console.log(decodeURI(savePath));
 
                     fs.writeFileSync(decodeURI(savePath), data, 'base64', function(err) {
                         console.log(err);
