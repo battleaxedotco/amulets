@@ -1,4 +1,4 @@
-/*jshint esversion: 6, asi: true */
+/*jshint esversion: 8, asi: true */
 
 const fs = require('fs');
 const path = require('path');
@@ -164,15 +164,6 @@ export default {
             console.log(prefsData);
             
             return prefsData;
-
-            // append prefs to the prefs obj even if they aren't in the prefs file
-            function updatePrefs(prefs) {
-                for (const key in prefs) {
-                    if (prefs.hasOwnProperty(key)) {
-                        prefsData[key] = (parsePrefs[key] !== undefined) ? parsePrefs[key] : prefs[key]
-                    }
-                }
-            }
         } catch (error) {
             console.log('error');
             
@@ -182,6 +173,14 @@ export default {
             } else {
                 return null;
             }          
+        }
+        // append prefs to the prefs obj even if they aren't in the prefs file
+        function updatePrefs(prefs) {
+            for (const key in prefs) {
+                if (prefs.hasOwnProperty(key)) {
+                    prefsData[key] = (parsePrefs[key] !== undefined) ? parsePrefs[key] : prefs[key]
+                }
+            }
         }
     },
     savePrefs(prefs) {
@@ -234,16 +233,14 @@ export default {
         const app = express()
         // app.use(express.json({ limit: "50mb" }) )
         // app.use(express.json() )
-        app.use(bodyParser.json({ limit: '50mb' }));
-        app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+        app.use(bodyParser.json({ limit: '200mb' }));
+        app.use(bodyParser.urlencoded({ extended: true, limit: '200mb' }));
 
         app.use(function(req, res, next) {
             res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             next();
         })
-        // app.use(bodyParser.json({ limit: '50mb' }));
-        // app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
         app.post('/evalscript', (req, res) => {
             let msg = req.body
