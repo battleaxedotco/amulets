@@ -223,19 +223,16 @@ export default {
         for (var i = 0; i < adobeApps.length; i++) {
             if (adobeApps[i].search(appName) != -1 && !runningApp) {
                 currentApp = adobeApps[i];
+                v.launchApp(currentApp, true);
                 runningApp = v.isAppRunning(currentApp) ? true : false;
+                // console.log(currentApp, runningApp);
             }
         }
-
-        v.launchApp(currentApp, true);
-        // console.log(currentApp);
     },
     newServer(port) {
         const PORT = port || "3200";
 
         const app = express()
-        // app.use(express.json({ limit: "50mb" }) )
-        // app.use(express.json() )
         app.use(bodyParser.json({ limit: '200mb' }));
         app.use(bodyParser.urlencoded({ extended: true, limit: '200mb' }));
 
@@ -260,7 +257,6 @@ export default {
             if (msg.getPrefs) {
                 let prefs = this.getPrefs()
                 data.prefs = prefs
-                // this.switchApps(msg.switch)
             }
             
             this.evalScript(msg.method, data)
@@ -283,6 +279,7 @@ export default {
             if (msg.switch) {
                 this.switchApps(msg.switch)
             }
+            setTimeout(() => {
 
             this.folderDialog('Select where to save files')
             .then(adobePath => {
@@ -298,8 +295,6 @@ export default {
                     fileNames.push(fileName)
 
                     let savePath = folderPath + '/' + fileName
-console.log(savePath);
-console.log(decodeURI(savePath));
 
                     fs.writeFileSync(decodeURI(savePath), data, 'base64', function(err) {
                         console.log(err);
@@ -314,6 +309,8 @@ console.log(decodeURI(savePath));
                 console.log("Looks like there was a problem:", error);
                 res.status(400).send(error)
             })
+
+            }, 1500);
         })
 
         app.listen(PORT, () => console.log(`Amulets server listening on port ${PORT}`))
