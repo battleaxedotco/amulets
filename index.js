@@ -217,15 +217,14 @@ export default {
         var appName = new RegExp(app + '-\\d');
         var adobeApps = v.getTargetSpecifiers();
         var currentApp;
-        var runningApp = false;
 
-        // find the newest version unless one earlier is running
+        // find a running version of app
         for (var i = 0; i < adobeApps.length; i++) {
-            if (adobeApps[i].search(appName) != -1 && !runningApp) {
+            if (adobeApps[i].search(appName) != -1) {
                 currentApp = adobeApps[i];
-                v.launchApp(currentApp, true);
-                runningApp = v.isAppRunning(currentApp) ? true : false;
-                // console.log(currentApp, runningApp);
+                if ( v.isAppRunning(currentApp) ) {
+                    v.launchApp(currentApp, true);
+                }
             }
         }
     },
