@@ -158,17 +158,14 @@ export default {
         console.log(userPath);
         
         try {
-            let readPrefs = fs.readFileSync(userPath + 'config/prefs.json', 'utf8');
-            let parsePrefs = JSON.parse(readPrefs)
+            let prefsFile = fs.readFileSync(userPath + 'config/prefs.json', 'utf8');
+            let parsePrefs = JSON.parse(prefsFile)
 
-            let prefsData = parsePrefs
-            
-            updatePrefs(prefs)
-            console.log(prefsData);
-            
+            let prefsData = updatePrefs(prefs, parsePrefs)
+            console.log(parsePrefs)
             return prefsData;
         } catch (error) {
-            console.log('error');
+            console.log('error getting prefs', error);
             
             if (prefs) {
                 this.savePrefs(prefs);
@@ -178,12 +175,20 @@ export default {
             }          
         }
         // append prefs to the prefs obj even if they aren't in the prefs file
-        function updatePrefs(prefs) {
-            for (const key in prefs) {
-                if (prefs.hasOwnProperty(key)) {
-                    prefsData[key] = (parsePrefs[key] !== undefined) ? parsePrefs[key] : prefs[key]
+        function updatePrefs(prefs, parsePrefs) {
+            let prefsData = {}
+            
+            if (prefs) {
+                for (const key in prefs) {
+                    if (prefs.hasOwnProperty(key)) {                    
+                        prefsData[key] = (parsePrefs[key] != undefined) ? parsePrefs[key] : prefs[key]
+                        console.log(parsePrefs[key]);
+                    }
                 }
+            } else {        // no prefs to append
+                prefsData = parsePrefs
             }
+            return prefsData
         }
     },
     savePrefs(prefs) {
