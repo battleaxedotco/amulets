@@ -186,8 +186,10 @@ export default {
             args = "";
         }
         var command = scriptName + '.' + funcName + '(' + args + ')';
-        return new Promise(function(resolve, reject) {
-            cs.evalScript(command, resolve);
+        return new Promise((resolve, reject) => {
+            cs.evalScript(command, res => {
+                if (res) { resolve(JSON.parse(res)) }
+            })
         });
     },
     evalString(script) {
