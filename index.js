@@ -40,7 +40,7 @@ export default {
 
         cs.evalScript(script)
     },
-    folderDialog(headerText) {
+    folderDialog(headerText, filePath) {
         if (!headerText) { headerText = '' }
         let script = `
             (function () {
@@ -53,9 +53,38 @@ export default {
             }) ()
         `;
 
+        if (filePath) {         
+            return new Promise((resolve, reject) => {
+                if (resolve) { resolve(filePath) }
+            })
+        } else {
+            return new Promise((resolve, reject) => {
+                cs.evalScript(script, resolve);
+            })
+        }
+    },
+    fileSaveDialog(headerText) {
+        if (!headerText) { headerText = '' }
+        let script = `
+            (function () {
+                var filePath = File.saveDialog(['${headerText}']);
+                var fileName = File.decode(filePath.name)
+                if (filePath) {
+                    return JSON.stringify({
+                            path: File.decode(filePath.path),
+                            name: fileName.substr(0, fileName.lastIndexOf('.')) || fileName,
+                        })
+                } else {
+                    return null;
+                }
+            }) ()
+        `;
+
         return new Promise((resolve, reject) => {
-            cs.evalScript(script, resolve);
-        });
+            cs.evalScript(script, res => {
+                if (res) { resolve(JSON.parse(res)) }
+            })
+        })
     },
     fileDialog(headerText) {
         if (!headerText) { headerText = '' }
@@ -71,8 +100,10 @@ export default {
         `;
 
         return new Promise((resolve, reject) => {
-            cs.evalScript(script, resolve);
-        });
+            cs.evalScript(command, res => {
+                if (res) { resolve(JSON.parse(res)) }
+            })
+        })
     },
     openPath(path) {
         let script = `
@@ -109,8 +140,9 @@ export default {
         if (adobePath == 'null') { return null }        // dialog canceled
         else if ( (cs.getOSInformation().substring(0, 3) == 'Mac') ) {                           // mac
             adobePath = adobePath.replace('/./', '/');       // remove ./ 
-
-            if (adobePath.charAt(0) !== '~') { adobePath = '/Volumes' + adobePath }	                // append /Volumes to filepath if not on the local drive
+            
+            if (adobePath.charAt(0) !== '~' && 
+                adobePath.substring(0, 6) !== '/Users') { adobePath = '/Volumes' + adobePath }	                // append /Volumes to filepath if not on the local drive
             else if (adobePath.substring(0,2) == '~/') { 
                 var homedir = path.join(cs.getSystemPath(SystemPath.USER_DATA), '/../../');
                 adobePath = adobePath.replace('~/', homedir);
@@ -128,7 +160,9 @@ export default {
                 var homedir = path.join(cs.getSystemPath(SystemPath.USER_DATA), '/../../');
                 adobePath = adobePath.replace('~/', homedir);
             }
-        }        
+        }
+        console.log('adobePath', adobePath);
+        
         return adobePath;
     },
     getPrefs(prefs) {
@@ -189,7 +223,7 @@ export default {
         var command = scriptName + '.' + funcName + '(' + args + ')';
         return new Promise((resolve, reject) => {
             cs.evalScript(command, res => {
-                if (res) { resolve(JSON.parse(res)) }
+                if (res && res != 'undefined') { resolve(JSON.parse(res)) }
             })
         });
     },
