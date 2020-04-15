@@ -19,8 +19,7 @@ export default {
         scriptName = props.scriptName || scriptName
     },
     userPath() {
-        const devPath = cs.getSystemPath(SystemPath.USER_DATA) + '/' + devName + '/';
-        return devPath + scriptName + '/';
+        return `${cs.getSystemPath(SystemPath.USER_DATA)}/${devName}/${scriptName}/`
     },
     checkPath(targetDir) {
         try {
@@ -32,10 +31,6 @@ export default {
     },
     popup(msg) {
         if (!msg) { msg = '' }
-        // let dump = 'Timelord says:\nHello butt'
-        // let script = 'alert("' +dump+ '")';
-        // let script = 'alert("' +msg+ '")';
-        
         let script = `alert("${msg}")`;
 
         cs.evalScript(script)
@@ -170,7 +165,7 @@ export default {
         console.log(userPath);
         
         try {
-            let prefsFile = fs.readFileSync(userPath + 'config/prefs.json', 'utf8');
+            let prefsFile = fs.readFileSync(`${userPath}config/prefs.json`, 'utf8');
             let parsePrefs = JSON.parse(prefsFile)
 
             let prefsData = updatePrefs(prefs, parsePrefs)
@@ -204,10 +199,10 @@ export default {
         }
     },
     savePrefs(prefs) {
-        let prefsPath = this.userPath() + 'config/';
+        let prefsPath = `${this.userPath()}config/`;
         this.checkPath(prefsPath);
         setTimeout(() => {
-            window.cep.fs.writeFile(prefsPath + 'prefs.json', JSON.stringify(prefs, false, 2));
+            window.cep.fs.writeFile(`${prefsPath}prefs.json`, JSON.stringify(prefs, false, 2));
         }, 100);
     },
     reload() {
@@ -220,7 +215,7 @@ export default {
         if (typeof args === "undefined" || args === "{}") {
             args = "";
         }
-        var command = scriptName + '.' + funcName + '(' + args + ')';
+        var command = `${scriptName}.${funcName}(${args})`;
         return new Promise((resolve, reject) => {
             cs.evalScript(command, res => {
                 if (res && res != 'undefined') { resolve(JSON.parse(res)) }
@@ -312,7 +307,7 @@ export default {
                     let fileName = image.name
                     fileNames.push(fileName)
 
-                    let savePath = folderPath + '/' + fileName
+                    let savePath = `${folderPath}/${fileName}`
 
                     fs.writeFileSync(decodeURI(savePath), data, 'base64', function(err) {
                         console.log(err);
@@ -356,9 +351,8 @@ export default {
 
         return returnedMsg
     },
-    openUserFolder(path) {
-        let configPath = this.userPath() + path;
-        cs.evalScript("Folder('"+ configPath +"').execute()")
+    openUserFolder(folderPath) {
+        cs.evalScript(`Folder('${this.userPath()}${folderPath}').execute()`)
     },
     webLink(url) {
         if (!url) { url = 'http://google.com'}
