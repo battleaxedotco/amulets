@@ -35,6 +35,52 @@ export default {
 
         cs.evalScript(script)
     },
+    confirmDialog(opt) {
+        let options = opt || {}
+        let defaultOptions = {
+            header: 'This is the header',
+            msg: 'Here is the message within a dialog box',
+            btn_confirm: 'OK',
+            btn_cancel: 'Cancel'
+        }
+        
+        let header = options.header || defaultOptions.header
+        let msg = options.msg || defaultOptions.msg
+        let btn_confirm = options.btn_confirm || defaultOptions.btn_confirm
+        let btn_cancel = options.btn_cancel || defaultOptions.btn_cancel
+        
+
+        let script = `(function () {
+            var overwriteFile = false
+            dialog()
+            return overwriteFile
+
+
+            function dialog () {
+                var w = new Window('dialog', '${header}' );
+
+                var messageText = w.add('statictext', undefined, '${msg}', { multiline: true })
+                messageText.preferredSize.width = 300;
+
+                var buttonGroup = w.add('group {alignment: "right"}');
+                buttonGroup.add('button', undefined, '${btn_cancel}', { name: 'cancel' })
+                var savePath = buttonGroup.add('button', undefined, '${btn_confirm}', { name: 'ok' });
+
+                savePath.onClick = function () {
+                    w.close();
+                    overwriteFile = true
+                };
+
+                w.show();
+            }
+        }) ()`
+
+        return new Promise((resolve, reject) => {
+            cs.evalScript(script, res => {
+                if (res) { resolve(JSON.parse(res)) }
+            })
+        })
+    },
     folderDialog(headerText, filePath) {
         if (!headerText) { headerText = '' }
         let script = `
@@ -131,7 +177,7 @@ export default {
             cs.evalScript(script, resolve);
         });
     },
-    untildify(adobePath) {
+    untildify(adobePath) {        
         if (adobePath == 'null') { return null }        // dialog canceled
         else if ( (cs.getOSInformation().substring(0, 3) == 'Mac') ) {                           // mac
             adobePath = adobePath.replace('/./', '/');       // remove ./ 
@@ -202,8 +248,49 @@ export default {
         let prefsPath = `${this.userPath()}config/`;
         this.checkPath(prefsPath);
         setTimeout(() => {
-            window.cep.fs.writeFile(`${prefsPath}prefs.json`, JSON.stringify(prefs, false, 2));
-        }, 100);
+            window.cep.fs.writeFile(`${prefsPath}prefs.json`, JSON.stringify(prefs, false, 2))
+        }, 100)
+    },
+    saveJsonFile(data, opt) {
+        let options = opt || {}
+        let defaultOptions = {
+            header: 'Save JSON file',
+            ext: 'json'
+        }
+
+        let header = options.header || defaultOptions.header
+        this.fileSaveDialog(header)
+        .then(file => {            
+            let fileName = file.name.split('.').slice(0, -1).join('.') || file.name
+            let ext = options.ext || defaultOptions.ext
+            return {
+                path: this.untildify(file.path),
+                name: `${ fileName }.${ ext }`
+            }
+        })
+        .then(file => {
+            let filePath = `${file.path}/${file.name}`
+            if (fs.existsSync(filePath)) {
+                let options = {
+                    header: ' ',
+                    msg: 'This file already exists. Would you like to overwrite it?',
+                    btn_confirm: 'Overwrite',
+                }
+                this.confirmDialog(options)
+                .then(overwriteFile => {
+                    if (overwriteFile) {
+                        window.cep.fs.writeFile(`${file.path}/${file.name}`, JSON.stringify(data, false, 2))
+                    }
+                })
+            } else {
+                window.cep.fs.writeFile(`${file.path}/${file.name}`, JSON.stringify(data, false, 2))
+            }
+            
+            
+        })
+        .catch(error => {
+            console.log("Looks like there was a problem:", error);
+        })
     },
     reload() {
         console.log('reload');
