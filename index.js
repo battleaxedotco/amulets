@@ -36,19 +36,13 @@ export default {
         cs.evalScript(script)
     },
     confirmDialog(opt) {
-        let options = opt || {}
-        let defaultOptions = {
-            header: 'This is the header',
-            msg: 'Here is the message within a dialog box',
-            btn_confirm: 'OK',
-            btn_cancel: 'Cancel'
+        let _opt = opt || {}
+        let options = {
+            header: _opt.header || 'This is the header',
+            msg: _opt.msg || 'Here is the message within a dialog box',
+            btnConfirm: _opt.btnConfirm || 'OK',
+            btnCancel: _opt.btnCancel || 'Cancel'
         }
-        
-        let header = options.header || defaultOptions.header
-        let msg = options.msg || defaultOptions.msg
-        let btn_confirm = options.btn_confirm || defaultOptions.btn_confirm
-        let btn_cancel = options.btn_cancel || defaultOptions.btn_cancel
-        
 
         let script = `(function () {
             var overwriteFile = false
@@ -57,14 +51,14 @@ export default {
 
 
             function dialog () {
-                var w = new Window('dialog', '${header}' );
+                var w = new Window('dialog', '${options.header}' );
 
-                var messageText = w.add('statictext', undefined, '${msg}', { multiline: true })
+                var messageText = w.add('statictext', undefined, '${options.msg}', { multiline: true })
                 messageText.preferredSize.width = 300;
 
                 var buttonGroup = w.add('group {alignment: "right"}');
-                buttonGroup.add('button', undefined, '${btn_cancel}', { name: 'cancel' })
-                var savePath = buttonGroup.add('button', undefined, '${btn_confirm}', { name: 'ok' });
+                buttonGroup.add('button', undefined, '${options.btnCancel}', { name: 'cancel' })
+                var savePath = buttonGroup.add('button', undefined, '${options.btnConfirm}', { name: 'ok' });
 
                 savePath.onClick = function () {
                     w.close();
@@ -207,6 +201,8 @@ export default {
         return adobePath;
     },
     getPrefs(prefs) {
+        console.log('get prefs');
+
         const userPath = this.userPath();
         console.log(userPath);
         
@@ -244,21 +240,27 @@ export default {
             return prefsData
         }
     },
-    savePrefs(prefs) {
-        let prefsPath = `${this.userPath()}config/`;
-        this.checkPath(prefsPath);
+    savePrefs(data, opt) {        
+        let _opt = opt || {}        
+        let options = {
+            folderName: _opt.folderName || 'config',
+            fileName: _opt.fileName || 'prefs',
+        }
+
+        let folderPath = `${this.userPath()}${ options.folderName }/`        
+        this.checkPath(folderPath);
         setTimeout(() => {
-            window.cep.fs.writeFile(`${prefsPath}prefs.json`, JSON.stringify(prefs, false, 2))
+            window.cep.fs.writeFile(`${folderPath}${options.fileName}.json`, JSON.stringify(data, false, 2))
         }, 100)
     },
     saveJsonFile(data, opt) {
-        let options = opt || {}
-        let defaultOptions = {
-            header: 'Save JSON file',
-            ext: 'json'
+        let _opt = opt || {}
+        let options = {
+            header: _opt.header || 'Save JSON file',
+            ext: _opt.ext || 'json'
         }
 
-        let header = options.header || defaultOptions.header
+        let header = options.header
         this.fileSaveDialog(header)
         .then(file => {            
             let fileName = file.name.split('.').slice(0, -1).join('.') || file.name
@@ -274,7 +276,7 @@ export default {
                 let options = {
                     header: ' ',
                     msg: 'This file already exists. Would you like to overwrite it?',
-                    btn_confirm: 'Overwrite',
+                    btnConfirm: 'Overwrite',
                 }
                 this.confirmDialog(options)
                 .then(overwriteFile => {
