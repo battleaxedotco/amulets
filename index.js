@@ -14,7 +14,7 @@ let devName = 'BattleAxe';
 let scriptName = getExtName().replace(' ', '');
 
 export default {
-    options(props) {
+    configure(props) {
         devName = props.devName || devName,
         scriptName = props.scriptName || scriptName
     },
@@ -31,6 +31,8 @@ export default {
     },
     popup(msg) {
         if (!msg) { msg = '' }
+        msg = msg.replace('\n', '\\n')
+        console.log(msg);
         let script = `alert("${msg}")`;
 
         cs.evalScript(script)
@@ -75,7 +77,7 @@ export default {
             })
         })
     },
-    folderDialog(headerText, filePath) {
+    folderOpenDialog(headerText, filePath) {
         if (!headerText) { headerText = '' }
         let script = `
             (function () {
@@ -108,6 +110,7 @@ export default {
                     return JSON.stringify({
                             path: File.decode(filePath.path),
                             name: fileName.substr(0, fileName.lastIndexOf('.')) || fileName,
+                            ext: fileName.split('.').pop() || null,
                         })
                 } else {
                     return null;
@@ -121,13 +124,14 @@ export default {
             })
         })
     },
-    fileDialog(headerText) {
+    fileOpenDialog(headerText) {
         if (!headerText) { headerText = '' }
         let script = `
             (function () {
                 var filePath = File.openDialog(['${headerText}']);
+                alert(filePath)
                 if (filePath) {
-                    return File.decode(filePath.absoluteURI);
+                    return JSON.stringify(File.decode(filePath.absoluteURI));
                 } else {
                     return null;
                 }
@@ -135,7 +139,7 @@ export default {
         `;
 
         return new Promise((resolve, reject) => {
-            cs.evalScript(command, res => {
+            cs.evalScript(script, res => {
                 if (res) { resolve(JSON.parse(res)) }
             })
         })
@@ -200,44 +204,42 @@ export default {
         
         return adobePath;
     },
-    getPrefs(prefs) {
-        console.log('get prefs');
+    getPrefs(preferences, opt) {
+        const userPath = this.userPath()
 
-        const userPath = this.userPath();
-        console.log(userPath);
+        let prefs = preferences || {}
+        let _opt = opt || {}
+        let options = {
+            folderName: _opt.folderName || 'config',
+            fileName: _opt.fileName || 'prefs',
+        }
         
         try {
-            let prefsFile = fs.readFileSync(`${userPath}config/prefs.json`, 'utf8');
-            let parsePrefs = JSON.parse(prefsFile)
-
-            let prefsData = updatePrefs(prefs, parsePrefs)
-            console.log(parsePrefs)
-            return prefsData;
-        } catch (error) {
-            console.log('error getting prefs', error);
-            
-            if (prefs) {
-                this.savePrefs(prefs);
-                return prefs;
-            } else {
-                return null;
-            }          
-        }
-        // append prefs to the prefs obj even if they aren't in the prefs file
-        function updatePrefs(prefs, parsePrefs) {
-            let prefsData = {}
-            
-            if (prefs) {
-                for (const key in prefs) {
-                    if (prefs.hasOwnProperty(key)) {                    
-                        prefsData[key] = (parsePrefs[key] != undefined) ? parsePrefs[key] : prefs[key]
-                        // console.log(parsePrefs[key]);
+            return new Promise((resolve, reject) => {
+                fs.readFile(`${userPath}${options.folderName}/${options.fileName}.json`, 'utf8', (err, data) => {
+                    if (err) {
+                        console.log('cant read prefs file');
+                        this.savePrefs(prefs)
+                        resolve(prefs)
+                        // reject(err)
+                    } else {                        
+                        let ret = JSON.parse(data)
+                        let prefsArr = Object.entries(prefs)
+                        prefsArr.forEach(element => {
+                            let key = element[0]
+                            
+                            if (ret[ key ] === undefined) {
+                                ret[ key ] = element[1]
+                            }
+                        })
+                        resolve(ret)                        
+                        // this.savePrefs(ret)
                     }
-                }
-            } else {        // no prefs to append
-                prefsData = parsePrefs
-            }
-            return prefsData
+                })
+            })
+        } catch (error) {            
+            console.log('error getting prefs', error)
+            return null;
         }
     },
     savePrefs(data, opt) {        
@@ -247,11 +249,14 @@ export default {
             fileName: _opt.fileName || 'prefs',
         }
 
-        let folderPath = `${this.userPath()}${ options.folderName }/`        
-        this.checkPath(folderPath);
+        let folderPath = `${ this.userPath() }${ options.folderName }/`        
+        this.checkPath(folderPath)
         setTimeout(() => {
             window.cep.fs.writeFile(`${folderPath}${options.fileName}.json`, JSON.stringify(data, false, 2))
         }, 100)
+    },
+    readJsonFile() {
+
     },
     saveJsonFile(data, opt) {
         let _opt = opt || {}
@@ -300,21 +305,34 @@ export default {
         window.location.reload()
     },
     evalScript(funcName, params) {        
-        var args = JSON.stringify(params);
+        let args = JSON.stringify(params)
         if (typeof args === "undefined" || args === "{}") {
-            args = "";
+            args = ""
         }
-        var command = `${scriptName}.${funcName}(${args})`;
+        let command = `${scriptName}.${funcName}(${args})`
+        console.log(command);
+        
         return new Promise((resolve, reject) => {
             cs.evalScript(command, res => {
                 if (res && res != 'undefined') { resolve(JSON.parse(res)) }
             })
-        });
+        })
     },
     evalString(script) {
         return new Promise((resolve, reject) => {
             cs.evalScript(script, resolve);
         });
+    },
+    bridgeTalk(host, script) {
+        let hostScript = `"${script.replace(/\n\s*/g, '\n').split('\n').join('')}"`
+        // alert(hostScript)
+        cs.evalScript(
+            // `var script = "fl.createDocument('timeline'); var doc = fl.getDocumentDOM(); doc.width = ${compData.width}; doc.height = ${compData.height}; doc.frameRate = ${compData.frameRate}; doc.backgroundColor = '${colorArrayToHex(compData.bgColor)}'; doc.zoomFactor = 0.1; doc.zoomFactor = 0.5;"
+            `var bt = new BridgeTalk();
+            bt.target = "${host}";
+            bt.body = ${hostScript};
+            bt.send();`
+        )
     },
     switchApps(app) {
         var appName = new RegExp(app + '-\\d');
@@ -344,7 +362,7 @@ export default {
             next();
         })
 
-        app.post('/evalscript', (req, res) => {
+        app.post('/evalScript', (req, res) => {
             let msg = req.body
             let data = msg.data
             // no method name requested
@@ -357,20 +375,31 @@ export default {
             }
             // switch to adobe app
             if (msg.getPrefs) {
-                let prefs = this.getPrefs()
-                data.prefs = prefs
+                this.getPrefs()
+                .then(prefs => { 
+                    data.prefs = prefs                     
+                })
+                .then(() => {
+                    this.evalScript(msg.method, data)
+                    .then((returnMsg) => {
+                        res.send(returnMsg)
+                    })
+                    .catch(error => {
+                        console.log("Looks like there was a problem:", error);
+                        res.status(400).send(error)
+                    })
+                })
+            } else {
+                this.evalScript(msg.method, data)
+                .then((returnMsg) => {
+                    res.send(returnMsg)
+                })
+                .catch(error => {
+                    console.log("Looks like there was a problem:", error);
+                    res.status(400).send(error)
+                })
             }
             
-            this.evalScript(msg.method, data)
-            .then((returnMsg) => {
-                console.log(returnMsg);
-                
-                res.send(returnMsg)
-            })
-            .catch(error => {
-                console.log("Looks like there was a problem:", error);
-                res.status(400).send(error)
-            })
         })
         app.post('/writeFiles', (req, res) => {
             let msg = req.body
@@ -430,6 +459,9 @@ export default {
             body: JSON.stringify(msg)
         })
         .then(res => {
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
             returnedMsg = res.json()            
             return returnedMsg
         })
@@ -472,8 +504,8 @@ function getExtName() {
     return extName.replace(' ', '');
 }
 
-function newVulcanMessage(message) {
-    var ccMessage = new VulcanMessage (VulcanMessage.TYPE_PREFIX + "scriptName");
-        ccMessage.setPayload(JSON.stringify(message));
-    VulcanInterface.dispatchMessage(ccMessage);
-}
+// function newVulcanMessage(message) {
+//     var ccMessage = new VulcanMessage (VulcanMessage.TYPE_PREFIX + "scriptName");
+//         ccMessage.setPayload(JSON.stringify(message));
+//     VulcanInterface.dispatchMessage(ccMessage);
+// }
