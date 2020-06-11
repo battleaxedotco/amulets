@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 
 import csInterface from './CSInterface.js';
 import Vulcan from './Vulcan.js';
+import { type } from 'os';
 const cs = new CSInterface();
 var v = new Vulcan();
 let devName = 'BattleAxe';
@@ -129,9 +130,19 @@ export default {
         let script = `
             (function () {
                 var filePath = File.openDialog(['${headerText}']);
-                alert(filePath)
+                var fileName = File.decode(filePath.name)
+                var userFile = new File(filePath)
+                userFile.open('r')
+                var fileData = userFile.read()
+                userFile.close()
+
                 if (filePath) {
-                    return JSON.stringify(File.decode(filePath.absoluteURI));
+                    return JSON.stringify({
+                        path: File.decode(filePath.absoluteURI),
+                        name: fileName.substr(0, fileName.lastIndexOf('.')) || fileName,
+                        ext: fileName.split('.').pop() || null,
+                        data: fileData,
+                    });
                 } else {
                     return null;
                 }
@@ -205,6 +216,8 @@ export default {
         return adobePath;
     },
     getPrefs(preferences, opt) {
+        console.log('get prefs');
+        
         const userPath = this.userPath()
 
         let prefs = preferences || {}
@@ -223,15 +236,10 @@ export default {
                         resolve(prefs)
                         // reject(err)
                     } else {                        
-                        let ret = JSON.parse(data)
-                        let prefsArr = Object.entries(prefs)
-                        prefsArr.forEach(element => {
-                            let key = element[0]
-                            
-                            if (ret[ key ] === undefined) {
-                                ret[ key ] = element[1]
-                            }
-                        })
+                        let filePrefs = JSON.parse(data)
+                        let ret = loopThruObj(prefs, filePrefs)
+                        // console.log(ret);
+                        
                         resolve(ret)                        
                         // this.savePrefs(ret)
                     }
@@ -240,6 +248,23 @@ export default {
         } catch (error) {            
             console.log('error getting prefs', error)
             return null;
+        }
+        function loopThruObj(prefs, ret) {
+            let prefsArr = (prefs && typeof prefs == 'object') ? Object.entries(prefs) : prefs        // convert obj to array
+            // console.log('prefsArr', prefsArr);
+            if (!prefsArr) { return ret }
+            
+            prefsArr.forEach(element => {               // loop through top level of obj
+                let key = element[0]
+
+                if (ret[key] === undefined) {       // cant find this prefs prop so add it
+                    ret[key] = element[1]
+                } else if (typeof element[1] == 'object') {
+                    console.log('element[1]', element[1]);
+                    ret[key] = loopThruObj(element[1], ret[key])
+                }
+            })
+            return ret
         }
     },
     savePrefs(data, opt) {        
@@ -253,12 +278,9 @@ export default {
         this.checkPath(folderPath)
         setTimeout(() => {
             window.cep.fs.writeFile(`${folderPath}${options.fileName}.json`, JSON.stringify(data, false, 2))
-        }, 100)
+        }, 50)
     },
-    readJsonFile() {
-
-    },
-    saveJsonFile(data, opt) {
+    exportJsonFile(data, opt) {
         let _opt = opt || {}
         let options = {
             header: _opt.header || 'Save JSON file',
@@ -324,6 +346,7 @@ export default {
         });
     },
     bridgeTalk(host, script) {
+        try {
         let hostScript = `"${script.replace(/\n\s*/g, '\n').split('\n').join('')}"`
         // alert(hostScript)
         cs.evalScript(
@@ -333,6 +356,10 @@ export default {
             bt.body = ${hostScript};
             bt.send();`
         )
+        this.switchApps(host)
+        } catch (e) {
+            alert(e)
+        }
     },
     switchApps(app) {
         var appName = new RegExp(app + '-\\d');
@@ -403,8 +430,7 @@ export default {
         })
         app.post('/writeFiles', (req, res) => {
             let msg = req.body
-            console.log(msg);
-            
+            console.log(msg);            
 
             // switch to adobe app
             if (msg.switch) {
@@ -412,7 +438,7 @@ export default {
             }
             setTimeout(() => {
 
-            this.folderDialog('Select where to save files')
+            this.folderOpenDialog('Select where to save files')
             .then(adobePath => {
                 return this.untildify(adobePath)
             })
@@ -443,7 +469,7 @@ export default {
 
             }, 1500);
         })
-
+                
         app.listen(PORT, () => console.log(`Amulets server listening on port ${PORT}`))
     },
     async newMessage(port, msg) {
@@ -485,14 +511,39 @@ export default {
         var event = new CSEvent("com.adobe.PhotoshopPersistent", "APPLICATION");
         event.extensionId = extId;
         cs.dispatchEvent(event);
-    }
+    },
+    openExtension(name) {
+        cs.requestOpenExtension(name)
+    },
+    closeExtension() {
+        cs.closeExtension()
+    },
+    // vulcanListener(vulcanId, msgList) {
+    //     VulcanInterface.addMessageListener( VulcanMessage.TYPE_PREFIX + vulcanId, message => {
+    //         var vMsg = JSON.parse(VulcanInterface.getPayload(message))
+    //         console.log(vMsg);
+            
+    //         msgList.forEach(msg => {
+    //             if (vMsg.cmd == msg.cmd) {
+    //                 msg.action
+    //             }
+    //         })
+    //     })
+    // },
+    // newVulcanMessage(vulcanId, message) {   
+    //     console.log(VulcanMessage.TYPE_PREFIX);
+           
+    //     // var ccMessage = new VulcanMessage(VulcanMessage.TYPE_PREFIX + vulcanId);
+    //     // ccMessage.setPayload(JSON.stringify(message));
+    //     // VulcanInterface.dispatchMessage(ccMessage);
+    // },
 }
 
 function getExtName() {
     var extId = window.__adobe_cep__.getExtensionId();        
     if (extId.split('.').pop() == 'hidden') { return 'fallbackName' }
     var extName = null;
-    
+
     var exts = JSON.parse(window.__adobe_cep__.getExtensions());
     for (var i = 0; i < exts.length; i++) {
         var ext = exts[i];
