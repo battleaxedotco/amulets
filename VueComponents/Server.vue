@@ -5,7 +5,6 @@
 
 <script>
 import amulets from 'amulets'
-
 export default {
     props: {
         devName: {
@@ -25,9 +24,10 @@ export default {
     }),
     methods: {
     },
-    mounted() {
+    created() {
         amulets.configure({devName: this.devName, scriptName: this.scriptName})
         amulets.newServer(this.port)
+        
     },
 }
 </script>
