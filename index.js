@@ -288,7 +288,7 @@ export default {
         }
 
         let header = options.header
-        this.fileSaveDialog(header)
+        this.fileSaveDialog(header, msg.path)
         .then(file => {            
             let fileName = file.name.split('.').slice(0, -1).join('.') || file.name
             let ext = options.ext || defaultOptions.ext
@@ -376,6 +376,25 @@ export default {
             }
         }
     },
+    isOpen(app) {
+        var appName = new RegExp(app + '-\\d');
+        var adobeApps = v.getTargetSpecifiers();
+        var currentApp;
+        var isOpen = false
+
+        // find a running version of app
+        for (var i = 0; i < adobeApps.length; i++) {
+            if (adobeApps[i].search(appName) != -1) {
+                currentApp = adobeApps[i];
+                if (v.isAppRunning(currentApp)) {
+                    isOpen = true
+                    break
+                }
+            }
+        }
+
+        return isOpen
+    },
     newServer(port) {
         const PORT = port || "3200";
 
@@ -437,8 +456,8 @@ export default {
                 this.switchApps(msg.switch)
             }
             setTimeout(() => {
-
-            this.folderOpenDialog('Select where to save files')
+            
+            this.folderOpenDialog('Select where to save files', msg.path)
             .then(adobePath => {
                 return this.untildify(adobePath)
             })
