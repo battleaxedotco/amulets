@@ -376,7 +376,7 @@ export default {
             }
         }
     },
-    isOpen(app) {
+    isAppOpen(app) {
         var appName = new RegExp(app + '-\\d');
         var adobeApps = v.getTargetSpecifiers();
         var currentApp;
