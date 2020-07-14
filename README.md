@@ -1,6 +1,6 @@
 # Amulets
 
-[![npm](https://img.shields.io/npm/v/@figma-plugin/helpers?logo=npm&cacheSeconds=1800)](https://www.npmjs.com/package/amulets)
+[![npm](https://img.shields.io/npm/v/amulets?logo=npm&cacheSeconds=1800)](https://www.npmjs.com/package/amulets)
 
 
 
