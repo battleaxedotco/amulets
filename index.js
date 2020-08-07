@@ -78,7 +78,7 @@ export default {
             })
         })
     },
-    folderOpenDialog(headerText, filePath) {
+    folderOpenDialog(headerText, folderPath) {
         if (!headerText) { headerText = '' }
         let script = `
             (function () {
@@ -91,9 +91,12 @@ export default {
             }) ()
         `;
 
-        if (filePath) {         
+        if (folderPath) {
+            if (!fs.existsSync(folderPath)) {    // create folder if folder doesn't exist
+                this.checkPath(folderPath)
+            }
             return new Promise((resolve, reject) => {
-                if (resolve) { resolve(filePath) }
+                if (resolve) { resolve(folderPath) }
             })
         } else {
             return new Promise((resolve, reject) => {
@@ -288,7 +291,7 @@ export default {
         }
 
         let header = options.header
-        this.fileSaveDialog(header, msg.path)
+        this.fileSaveDialog(header)
         .then(file => {            
             let fileName = file.name.split('.').slice(0, -1).join('.') || file.name
             let ext = options.ext || defaultOptions.ext
@@ -520,7 +523,7 @@ export default {
     openUserFolder(folderPath) {
         cs.evalScript(`Folder('${this.userPath()}${folderPath}').execute()`)
     },
-    webLink(url) {
+    openURL(url) {
         if (!url) { url = 'http://google.com'}
         cs.openURLInDefaultBrowser(url);
     },
