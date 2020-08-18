@@ -80,6 +80,20 @@ export default {
     },
     folderOpenDialog(headerText, folderPath) {
         if (!headerText) { headerText = '' }
+        return new Promise((resolve, reject) => {
+            let saveData = window.cep.fs.showSaveDialogEx(headerText, undefined, ['json'], 'TimelordSettings')
+            // let fileData = {
+            //     path: path.dirname(saveData.data),
+            //     name: path.basename(saveData.data),
+            //     ext: path.extname(saveData.data)
+            // }
+            console.log(fileData);
+            if (saveData.err == 0) {
+                resolve(saveData.data)
+            } else {
+                reject('error')
+            }
+        })
         let script = `
             (function () {
                 var folderPath = Folder.selectDialog(['${headerText}']);
@@ -105,6 +119,7 @@ export default {
         }
     },
     fileSaveDialog(headerText) {
+        if (!headerText) { headerText = '' }
         return new Promise((resolve, reject) => {
             let saveData = window.cep.fs.showSaveDialogEx(headerText, undefined, ['json'], 'TimelordSettings')
             let fileData = {
@@ -122,32 +137,14 @@ export default {
     },
     fileOpenDialog(headerText) {
         if (!headerText) { headerText = '' }
-        let script = `
-            (function () {
-                var filePath = File.openDialog(['${headerText}']);
-                var fileName = File.decode(filePath.name)
-                var userFile = new File(filePath)
-                userFile.open('r')
-                var fileData = userFile.read()
-                userFile.close()
-
-                if (filePath) {
-                    return JSON.stringify({
-                        path: File.decode(filePath.absoluteURI),
-                        name: fileName.substr(0, fileName.lastIndexOf('.')) || fileName,
-                        ext: fileName.split('.').pop() || null,
-                        data: fileData,
-                    });
-                } else {
-                    return null;
-                }
-            }) ()
-        `;
-
         return new Promise((resolve, reject) => {
-            cs.evalScript(script, res => {
-                if (res) { resolve(JSON.parse(res)) }
-            })
+            let saveData = window.cep.fs.showOpenDialogEx(false, false, headerText)
+            if (saveData.err == 0) {
+                let fileData = window.cep.fs.readFile(saveData.data[0])
+                resolve(fileData)
+            } else {
+                reject('error')
+            }
         })
     },
     openPath(path) {
