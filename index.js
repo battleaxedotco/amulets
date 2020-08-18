@@ -105,27 +105,19 @@ export default {
         }
     },
     fileSaveDialog(headerText) {
-        if (!headerText) { headerText = '' }
-        let script = `
-            (function () {
-                var filePath = File.saveDialog(['${headerText}']);
-                var fileName = File.decode(filePath.name)
-                if (filePath) {
-                    return JSON.stringify({
-                            path: File.decode(filePath.path),
-                            name: fileName.substr(0, fileName.lastIndexOf('.')) || fileName,
-                            ext: fileName.split('.').pop() || null,
-                        })
-                } else {
-                    return null;
-                }
-            }) ()
-        `;
-
         return new Promise((resolve, reject) => {
-            cs.evalScript(script, res => {
-                if (res) { resolve(JSON.parse(res)) }
-            })
+            let saveData = window.cep.fs.showSaveDialogEx(headerText, undefined, ['json'], 'TimelordSettings')
+            let fileData = {
+                path: path.dirname(saveData.data),
+                name: path.basename(saveData.data),
+                ext: path.extname(saveData.data)
+            }
+            console.log( fileData );
+            if (saveData.err == 0) {
+                resolve(fileData)
+            } else {
+                reject('error')
+            }
         })
     },
     fileOpenDialog(headerText) {
@@ -292,7 +284,7 @@ export default {
 
         let header = options.header
         this.fileSaveDialog(header)
-        .then(file => {            
+        .then(file => {  
             let fileName = file.name.split('.').slice(0, -1).join('.') || file.name
             let ext = options.ext || defaultOptions.ext
             return {
@@ -302,23 +294,7 @@ export default {
         })
         .then(file => {
             let filePath = `${file.path}/${file.name}`
-            if (fs.existsSync(filePath)) {
-                let options = {
-                    header: ' ',
-                    msg: 'This file already exists. Would you like to overwrite it?',
-                    btnConfirm: 'Overwrite',
-                }
-                this.confirmDialog(options)
-                .then(overwriteFile => {
-                    if (overwriteFile) {
-                        window.cep.fs.writeFile(`${file.path}/${file.name}`, JSON.stringify(data, false, 2))
-                    }
-                })
-            } else {
-                window.cep.fs.writeFile(`${file.path}/${file.name}`, JSON.stringify(data, false, 2))
-            }
-            
-            
+            window.cep.fs.writeFile(filePath, JSON.stringify(data, false, 2))            
         })
         .catch(error => {
             console.log("Looks like there was a problem:", error);
