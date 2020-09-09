@@ -79,21 +79,6 @@ export default {
         })
     },
     folderOpenDialog(headerText, folderPath) {
-        if (!headerText) { headerText = '' }
-        return new Promise((resolve, reject) => {
-            let saveData = window.cep.fs.showSaveDialogEx(headerText, undefined, ['json'], 'TimelordSettings')
-            // let fileData = {
-            //     path: path.dirname(saveData.data),
-            //     name: path.basename(saveData.data),
-            //     ext: path.extname(saveData.data)
-            // }
-            console.log(fileData);
-            if (saveData.err == 0) {
-                resolve(saveData.data)
-            } else {
-                reject('error')
-            }
-        })
         let script = `
             (function () {
                 var folderPath = Folder.selectDialog(['${headerText}']);
@@ -549,9 +534,3 @@ function getExtName() {
     }
     return extName.replace(' ', '');
 }
-
-// function newVulcanMessage(message) {
-//     var ccMessage = new VulcanMessage (VulcanMessage.TYPE_PREFIX + "scriptName");
-//         ccMessage.setPayload(JSON.stringify(message));
-//     VulcanInterface.dispatchMessage(ccMessage);
-// }
