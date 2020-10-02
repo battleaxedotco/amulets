@@ -1,6 +1,6 @@
 {
   "name": "amulets",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A collection of tools for CEP creation to support Battle Axe tools",
   "main": "index.js",
   "scripts": {
