@@ -450,7 +450,7 @@ export default {
             }, 1500);
         })
                 
-        app.listen(PORT, () => console.log(`Amulets server listening on port ${PORT}`))
+        app.listen(PORT, '127.0.0.1', () => console.log(`Amulets server listening on port ${PORT}`))
     },
     async newMessage(port, msg) {
         const PORT = port || "3200";
