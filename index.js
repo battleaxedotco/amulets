@@ -32,11 +32,34 @@ export default {
     },
     popup(msg) {
         if (!msg) { msg = '' }
-        msg = msg.replace('\n', '\\n')
+        msg = msg.replace(/\n/g, '\\n')
         console.log(msg);
         let script = `alert("${msg}")`;
 
         cs.evalScript(script)
+    },
+    debug(data) {
+        let time = timestamp()
+        let options = {
+            folderName: 'logs',
+            fileName: `${scriptName}_error${time}`,
+        }
+        let folderPath = `${this.userPath()}${options.folderName}/` 
+        this.checkPath(folderPath)
+        setTimeout(() => {
+            window.cep.fs.writeFile(`${folderPath}${options.fileName}.txt`, data.toString())
+        }, 50)
+        
+        this.popup(`${scriptName} error log created at:\n${folderPath}`)
+        this.openPath(folderPath)
+
+        function timestamp() {
+            let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            let date = new Date()
+            let timestamp = `-${(date.getFullYear())}_${monthNames[date.getMonth()]}_${('0' + date.getDate()).slice(-2)}_${('0' + date.getHours()).slice(-2)}_${('0' + date.getMinutes()).slice(-2)}_${('0' + date.getSeconds()).slice(-2)}`
+            return timestamp
+        }
     },
     confirmDialog(opt) {
         let _opt = opt || {}
@@ -190,7 +213,7 @@ export default {
         }
         console.log('adobePath', adobePath);
         
-        return adobePath;
+        return adobePath.replace(/\/~/g, '');
     },
     getPrefs(preferences, opt) {
         console.log('get prefs');
