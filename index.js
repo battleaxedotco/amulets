@@ -10,7 +10,10 @@ import csInterface from './CSInterface.js';
 import Vulcan from './Vulcan.js';
 import { type } from 'os';
 const cs = new CSInterface();
-var v = new Vulcan();
+const v = new Vulcan();
+import util, { log } from 'util'
+const exec = util.promisify(require('child_process').exec);
+
 let devName = 'BattleAxe';
 let scriptName = getExtName().replace(' ', '');
 
@@ -57,7 +60,7 @@ export default {
             let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             let date = new Date()
-            let timestamp = `-${(date.getFullYear())}_${monthNames[date.getMonth()]}_${('0' + date.getDate()).slice(-2)}_${('0' + date.getHours()).slice(-2)}_${('0' + date.getMinutes()).slice(-2)}_${('0' + date.getSeconds()).slice(-2)}`
+            let timestamp = `-${(date.getFullYear())}_${monthNames[date.getMonth()]}_${('0' + date.getDate()).slice(-2)}${('0' + date.getHours()).slice(-2)}${('0' + date.getMinutes()).slice(-2)}${('0' + date.getSeconds()).slice(-2)}`
             return timestamp
         }
     },
@@ -156,16 +159,18 @@ export default {
         })
     },
     openPath(path) {
-        let script = `
-            (function () {
-                var folderPath = Folder('${path}');
-                folderPath.execute();
-            }) ()
-        `;
+        require('child_process').exec(`start "" "${path}"`)       // win
+        require('child_process').exec(`open "" "${path}"`)          // osx
+        // let script = `
+        //     (function () {
+        //         var folderPath = Folder('${path}');
+        //         folderPath.execute();
+        //     }) ()
+        // `;
 
-        return new Promise((resolve, reject) => {
-            cs.evalScript(script, resolve);
-        });
+        // return new Promise((resolve, reject) => {
+        //     cs.evalScript(script, resolve);
+        // });
     },
     openPathRelativeToProj(relPath) {
         // currently AE only
