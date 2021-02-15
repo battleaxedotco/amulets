@@ -159,8 +159,8 @@ export default {
         })
     },
     openPath(path) {
-        require('child_process').exec(`start "" "${path}"`)       // win
-        require('child_process').exec(`open "" "${path}"`)          // osx
+        require('child_process').exec(`start "${path}"`)       // win
+        require('child_process').exec(`open "${path}"`)          // osx
         // let script = `
         //     (function () {
         //         var folderPath = Folder('${path}');
