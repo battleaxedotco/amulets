@@ -191,12 +191,14 @@ export default {
             cs.evalScript(script, resolve);
         });
     },
-    untildify(adobePath) {        
+    untildify(adobePath) {   
         if (adobePath == 'null') { return null }        // dialog canceled
         else if ( (cs.getOSInformation().substring(0, 3) == 'Mac') ) {                           // mac
             adobePath = adobePath.replace('/./', '/');       // remove ./ 
             
-            if (adobePath.charAt(0) !== '~' && 
+            if (adobePath.substring(0, 8) == '/Volumes') {
+                return adobePath }
+            else if (adobePath.charAt(0) !== '~' && 
                 adobePath.substring(0, 6) !== '/Users') { adobePath = '/Volumes' + adobePath }	                // append /Volumes to filepath if not on the local drive
             else if (adobePath.substring(0,2) == '~/') { 
                 var homedir = path.join(cs.getSystemPath(SystemPath.USER_DATA), '/../../');
