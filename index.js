@@ -5,6 +5,7 @@ const path = require('path');
 const shell = require('shelljs');
 const express = require('express');
 const bodyParser = require('body-parser');
+const rimraf = require('rimraf');
 
 import csInterface from './CSInterface.js';
 import Vulcan from './Vulcan.js';
@@ -150,6 +151,18 @@ export default {
         if (!headerText) { headerText = '' }
         return new Promise((resolve, reject) => {
             let saveData = window.cep.fs.showOpenDialogEx(false, false, headerText)
+            if (saveData.err == 0) {
+                let fileData = window.cep.fs.readFile(saveData.data[0])
+                resolve(fileData)
+            } else {
+                reject('error')
+            }
+        })
+    },
+    folderPickerDialog(headerText) {
+        if (!headerText) { headerText = '' }
+        return new Promise((resolve, reject) => {
+            let saveData = window.cep.fs.showOpenDialogEx(false, true, headerText)
             if (saveData.err == 0) {
                 let fileData = window.cep.fs.readFile(saveData.data[0])
                 resolve(fileData)
@@ -440,47 +453,64 @@ export default {
         })
         app.post('/writeFiles', (req, res) => {
             let msg = req.body
-            console.log(msg);            
 
             // switch to adobe app
             if (msg.switch) {
                 this.switchApps(msg.switch)
             }
-            setTimeout(() => {
             
-            this.folderOpenDialog('Select where to save files', msg.path)
-            .then(adobePath => {
-                return this.untildify(adobePath)
+            this.getPrefs()
+            .then(prefs => {
+                console.log(prefs);
+                msg.data.prefs = prefs
+                this.checkPath(prefs.absolutePath)
+                writeFiles(msg, prefs.absolutePath)
+                .then(folderPath => {
+                    msg.data.layerData[0].folderPath = folderPath
+                })
             })
-            .then(folderPath => {
-                let images = msg.images;
-                let fileNames = []
-
-                images.forEach(image => {
-                    let data = image.imgData
-                    let fileName = image.name
-                    fileNames.push(fileName)
-
-                    let savePath = `${folderPath}/${fileName}`
-
-                    fs.writeFileSync(decodeURI(savePath), data, 'base64', function(err) {
-                        console.log(err);
-                    });
-                });
-                return folderPath
-            })
-            .then((returnMsg) => {
-                res.send(JSON.stringify({path: returnMsg}))
-            })
-            .catch(error => {
-                console.log("Looks like there was a problem:", error);
-                res.status(400).send(error)
+            .then(() => {
+                this.evalScript('buildLayers', msg.data)
+                .then((returnMsg) => {
+                    res.send(returnMsg)
+                })
+                .catch(error => {
+                    console.log("Looks like there was a problem:", error);
+                    res.status(400).send(error)
+                })
             })
 
-            }, 1500);
         })
-                
+
         app.listen(PORT, '127.0.0.1', () => console.log(`Amulets server listening on port ${PORT}`))
+
+        function writeFiles(msg, path) {
+            try {
+                return new Promise((resolve, reject) => {
+                    let folderPath = (!path || path == '') ? cep.fs.showOpenDialogEx(false, true, 'Save images').data[0] : path
+                    if (!folderPath) {
+                        reject('No path selected for images')
+                    }
+
+                    let images = msg.images;
+                    let fileNames = []
+
+                    images.forEach(image => {
+                        let data = image.imgData
+                        let fileName = image.name
+                        fileNames.push(fileName)
+
+                        let savePath = `${folderPath}/${fileName}`
+
+                        fs.writeFileSync(decodeURI(savePath), data, 'base64', function (err) {
+                            console.log(err);
+                        });
+                    });
+
+                    resolve(folderPath)
+                })
+            } catch (error) { alert(`try/catch: ${error}`) }
+        }
     },
     async newMessage(port, msg) {
         const PORT = port || "3200";
@@ -527,6 +557,22 @@ export default {
     },
     closeExtension() {
         cs.closeExtension()
+    },
+    newTemp() {
+        // check temp folder
+        const folderPath = `${this.userPath()}/temp`
+
+        if (!fs.existsSync(folderPath)) {    // create folder if folder doesn't exist
+            this.checkPath(folderPath)
+        }
+        return folderPath
+    },
+    deleteTemp() {
+        const folderPath = `${this.userPath()}/temp`
+
+        rimraf(folderPath, () => {
+            console.log(`${folderPath} deleted`);
+        })
     },
     // vulcanListener(vulcanId, msgList) {
     //     VulcanInterface.addMessageListener( VulcanMessage.TYPE_PREFIX + vulcanId, message => {
