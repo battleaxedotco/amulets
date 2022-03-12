@@ -352,7 +352,6 @@ export default {
     bridgeTalk(host, script) {
         try {
         let hostScript = `"${script.replace(/\n\s*/g, '\n').split('\n').join('')}"`
-        // alert(hostScript)
         cs.evalScript(
             // `var script = "fl.createDocument('timeline'); var doc = fl.getDocumentDOM(); doc.width = ${compData.width}; doc.height = ${compData.height}; doc.frameRate = ${compData.frameRate}; doc.backgroundColor = '${colorArrayToHex(compData.bgColor)}'; doc.zoomFactor = 0.1; doc.zoomFactor = 0.5;"
             `var bt = new BridgeTalk();
@@ -360,7 +359,9 @@ export default {
             bt.body = ${hostScript};
             bt.send();`
         )
-        this.switchApps(host)
+        cs.evalScript(
+            `BridgeTalk.bringToFront('${host}')`
+        )
         } catch (e) {
             alert(e)
         }
