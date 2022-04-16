@@ -357,11 +357,16 @@ export default {
             `var bt = new BridgeTalk();
             bt.target = "${host}";
             bt.body = ${hostScript};
-            bt.send();`
+            bt.send();
+            bt.bringToFront('${host}');
+            `
         )
-        cs.evalScript(
-            `BridgeTalk.bringToFront('${host}')`
-        )
+        // cs.evalScript(
+        //     `
+        //     var bt = new BridgeTalk();
+        //     bt.bringToFront('${host}')
+        //     `
+        // )
         } catch (e) {
             alert(e)
         }
