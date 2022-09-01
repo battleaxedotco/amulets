@@ -20,7 +20,7 @@
  * to the Vulcan. Allows you to launch CC applications
  * and discover information about them.
  */
- function Vulcan()
+ export default function Vulcan()
  {
  }
  

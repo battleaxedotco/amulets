@@ -476,7 +476,6 @@ export default {
                     console.log('start evalscript');
                     this.evalScript(msg.method, data)
                     .then((returnMsg) => {
-                        alert(returnMsg)
                         res.send(returnMsg)
                     })
                     .catch(error => {
