@@ -339,7 +339,8 @@ export default {
         console.log(command);
         
         return new Promise((resolve, reject) => {
-            cs.evalScript(command, res => {
+            cs.evalScript(command, (res) => {
+                console.log(res);
                 if (res && res != 'undefined') { resolve(JSON.parse(res)) }
             })
         })
@@ -373,32 +374,67 @@ export default {
     },
     switchApps(app) {
         var appName = new RegExp(app + '-\\d');
-        var adobeApps = v.getTargetSpecifiers();
-        var currentApp;
 
-        // find a running version of app
-        for (var i = 0; i < adobeApps.length; i++) {
-            if (adobeApps[i].search(appName) != -1) {
-                currentApp = adobeApps[i];
-                if ( v.isAppRunning(currentApp) ) {
-                    v.launchApp(currentApp, true);
+        try {
+            var adobeApps = v.getTargetSpecifiersEx();
+            var currentApp;
+            
+            // find a running version of app
+            for (var i = 0; i < adobeApps.length; i++) {
+                if (adobeApps[i].search(appName) != -1) {
+                    currentApp = adobeApps[i];
+                    if ( v.isAppRunningEx(currentApp) ) {
+                        v.launchAppEx(currentApp, true);
+                    }
+                }
+            }
+        } catch (error) {       // support for deprecated vulcan methods
+            var adobeApps = v.getTargetSpecifiers();
+            var currentApp;
+            
+            // find a running version of app
+            for (var i = 0; i < adobeApps.length; i++) {
+                if (adobeApps[i].search(appName) != -1) {
+                    currentApp = adobeApps[i];
+                    if ( v.isAppRunning(currentApp) ) {
+                        v.launchApp(currentApp, true);
+                    }
                 }
             }
         }
+        console.log(app);
     },
     isAppOpen(app) {
         var appName = new RegExp(app + '-\\d');
-        var adobeApps = v.getTargetSpecifiers();
-        var currentApp;
-        var isOpen = false
 
-        // find a running version of app
-        for (var i = 0; i < adobeApps.length; i++) {
-            if (adobeApps[i].search(appName) != -1) {
-                currentApp = adobeApps[i];
-                if (v.isAppRunning(currentApp)) {
-                    isOpen = true
-                    break
+        try {
+            var adobeApps = v.getTargetSpecifiersEx();
+            var currentApp;
+            var isOpen = false
+    
+            // find a running version of app
+            for (var i = 0; i < adobeApps.length; i++) {
+                if (adobeApps[i].search(appName) != -1) {
+                    currentApp = adobeApps[i];
+                    if (v.isAppRunningEx(currentApp)) {
+                        isOpen = true
+                        break
+                    }
+                }
+            }
+        } catch (error) {       // support for deprecated vulcan methods
+            var adobeApps = v.getTargetSpecifiers();
+            var currentApp;
+            var isOpen = false
+    
+            // find a running version of app
+            for (var i = 0; i < adobeApps.length; i++) {
+                if (adobeApps[i].search(appName) != -1) {
+                    currentApp = adobeApps[i];
+                    if (v.isAppRunning(currentApp)) {
+                        isOpen = true
+                        break
+                    }
                 }
             }
         }
@@ -429,6 +465,7 @@ export default {
             if (msg.switch) {
                 this.switchApps(msg.switch)
             }
+            console.log(data);
             // switch to adobe app
             if (msg.getPrefs) {
                 this.getPrefs()
@@ -436,8 +473,10 @@ export default {
                     data.prefs = prefs                     
                 })
                 .then(() => {
+                    console.log('start evalscript');
                     this.evalScript(msg.method, data)
                     .then((returnMsg) => {
+                        alert(returnMsg)
                         res.send(returnMsg)
                     })
                     .catch(error => {
